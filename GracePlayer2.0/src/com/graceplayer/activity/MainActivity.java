@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -31,6 +33,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.KeyEvent;
 
 import com.graceplayer.data.Music;
 import com.graceplayer.data.MusicList;
@@ -75,6 +78,10 @@ public class MainActivity extends Activity {
 
     //歌曲列表对象
     private ArrayList<Music> musicArrayList;
+
+    //退出判断标记
+    private static Boolean isExit = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -537,6 +544,41 @@ public class MainActivity extends Activity {
                     break;
         }
         return super.onOptionsItemSelected(item);
+    }
+    //重写onkeyDown函数
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // TODO Auto-generated method stub
+        int progress;
+        switch(keyCode)
+        {
+            case KeyEvent.KEYCODE_BACK:
+                exitByDoubleClick();
+                break;
+        }
+        return false;
+    }
+    private void exitByDoubleClick()
+    {
+        Timer timer = null;
+        if(isExit == false)
+        {
+            isExit = true;		//准备退出
+            Toast.makeText(this, "再按一次退出程序！", Toast.LENGTH_SHORT).show();
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+
+                @Override
+                public void run() {
+                    // TODO Auto-generated method stub
+                    isExit = false;
+                }
+            }, 2000);   //2 秒后会执行 run函数的内容，如果2秒内没有按下返回键，则启动定时器修改isExit的值
+        }
+        else
+        {
+            System.exit(0);
+        }
     }
 
 }
