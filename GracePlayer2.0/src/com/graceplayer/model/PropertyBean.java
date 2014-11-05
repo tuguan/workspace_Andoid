@@ -9,51 +9,51 @@ import com.graceplayer.graceplayer.R;
 import android.content.Context;
 
 public class PropertyBean {
-	public static String[] THEMES;
-	private static String DEFAULT_THEME;
-	// Ó¦ÓÃÉÏÏÂÎÄ
-	private Context context;
-	// Ö÷Ìâ
-	private String theme;
-	public PropertyBean(Context context) {
-		this.context = context;
-		// »ñÈ¡array.xmlÖĞµÄÖ÷ÌâÃû³Æ
-		THEMES = context.getResources().getStringArray(R.array.theme);
-		DEFAULT_THEME = THEMES[0];
-		loadTheme();
-	}
-	/** ¶ÁÈ¡Ö÷Ìâ¡£±£´æÔÚÎÄ¼ş"configuration.cfg"ÖĞ */
-	private void loadTheme() {
-		Properties properties = new Properties();
-		try {
-			FileInputStream stream = context.openFileInput("configuration.cfg");
-			properties.load(stream);
-			theme = properties.getProperty("theme").toString();
-		} catch (Exception e) {
-			saveTheme(DEFAULT_THEME); // Ä¬ÈÏÖµ
-		}
-	}
-	
-	/** ±£´æÖ÷Ìâ¡£±£´æÔÚÎÄ¼ş"configuration.cfg"ÖĞ */
-	private boolean saveTheme(String theme) {
-		Properties properties = new Properties();
-		properties.put("theme", theme);
-		try {
-			FileOutputStream stream = context.openFileOutput(
-					"configuration.cfg", Context.MODE_PRIVATE);
-			properties.store(stream, "");
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
-	}
-	
-	public String getTheme() {
-		return theme;
-	}
+    public static String[] THEMES;
+    private static String DEFAULT_THEME;
+    // åº”ç”¨ä¸Šä¸‹æ–‡
+    private Context context;
+    // ä¸»é¢˜
+    private String theme;
+    public PropertyBean(Context context) {
+        this.context = context;
+        // è·å–array.xmlä¸­çš„ä¸»é¢˜åç§°
+        THEMES = context.getResources().getStringArray(R.array.theme);
+        DEFAULT_THEME = THEMES[0];
+        loadTheme();
+    }
+    /** è¯»å–ä¸»é¢˜ã€‚ä¿å­˜åœ¨æ–‡ä»¶"configuration.cfg"ä¸­ */
+    private void loadTheme() {
+        Properties properties = new Properties();
+        try {
+            FileInputStream stream = context.openFileInput("configuration.cfg");
+            properties.load(stream);
+            theme = properties.getProperty("theme").toString();
+        } catch (Exception e) {
+            saveTheme(DEFAULT_THEME); // é»˜è®¤å€¼
+        }
+    }
 
-	public void setAndSaveTheme(String theme) {
-		this.theme = theme;
-		saveTheme(theme);
-	}
+    /** ä¿å­˜ä¸»é¢˜ã€‚ä¿å­˜åœ¨æ–‡ä»¶"configuration.cfg"ä¸­ */
+    private boolean saveTheme(String theme) {
+        Properties properties = new Properties();
+        properties.put("theme", theme);
+        try {
+            FileOutputStream stream = context.openFileOutput(
+                    "configuration.cfg", Context.MODE_PRIVATE);
+            properties.store(stream, "");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setAndSaveTheme(String theme) {
+        this.theme = theme;
+        saveTheme(theme);
+    }
 }

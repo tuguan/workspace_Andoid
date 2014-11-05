@@ -38,447 +38,505 @@ import com.graceplayer.graceplayer.R;
 import com.graceplayer.model.PropertyBean;
 
 public class MainActivity extends Activity {
-	
-	// ½ø¶ÈÌõ¿ØÖÆ³£Á¿
-	private static final int PROGRESS_INCREASE = 0;
-	private static final int PROGRESS_PAUSE = 1;
-	private static final int PROGRESS_RESET = 2;
-	
-	// ÏÔÊ¾×é¼ş
-	private TextView tv_current_time;
-	private TextView tv_total_time;
-	private ImageButton imgBtn_Previous;
-	private ImageButton imgBtn_PlayOrPause;
-	private ImageButton imgBtn_Stop;
-	private ImageButton imgBtn_Next;
-	private SeekBar seekBar;
-	private ListView listView;
-	private RelativeLayout root_Layout;
 
-	// µ±Ç°¸èÇúµÄ³ÖĞøÊ±¼äºÍµ±Ç°Î»ÖÃ£¬×÷ÓÃÓÚ½ø¶ÈÌõ
-	private int total_time;
-	private int curent_time;
-	// µ±Ç°¸èÇúµÄĞòºÅ£¬ÏÂ±ê´Ó0¿ªÊ¼
-	private int number;
-	// ²¥·Å×´Ì¬
-	private int status;
-	// ¹ã²¥½ÓÊÕÆ÷
-	private StatusChangedReceiver receiver;
-	// ¸üĞÂ½ø¶ÈÌõµÄHandler
-	private Handler seekBarHandler;
-	
-	//¸èÇúÁĞ±í¶ÔÏó
-	private ArrayList<Music> musicArrayList;
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+    // è¿›åº¦æ¡æ§åˆ¶å¸¸é‡
+    private static final int PROGRESS_INCREASE = 0;
+    private static final int PROGRESS_PAUSE = 1;
+    private static final int PROGRESS_RESET = 2;
 
-		findViews();
-		registerListeners();
-		initMusicList();
-		initListView();
-		checkMusicfile();
-		
-		startService(new Intent(this, MusicService.class));
-		// °ó¶¨¹ã²¥½ÓÊÕÆ÷£¬¿ÉÒÔ½ÓÊÕ¹ã²¥
-		bindStatusChangedReceiver();
-		sendBroadcastOnCommand(MusicService.COMMAND_CHECK_IS_PLAYING);
-		// ³õÊ¼»¯½ø¶ÈÌõµÄHandler
-		initSeekBarHandler();
-		status = MusicService.COMMAND_STOP;
-	}
+    //æ’­æ”¾æ¨¡å¼å¸¸é‡
+    private static final int MODE_LIST_SEQUENCE= 0;
+    private static final int MODE_SINGLE_CYCLE = 1;
+    private static final int MODE_LIST_CYCLE = 2;
+    private int playmode;
 
-	void findViews() {
-		listView = (ListView) findViewById(R.id.main_listview);
-		tv_current_time = (TextView) findViewById(R.id.main_tv_curtime);
-		tv_total_time = (TextView) findViewById(R.id.main_tv_totaltime);
-		imgBtn_Previous = (ImageButton) findViewById(R.id.main_ibtn_pre);
-		imgBtn_PlayOrPause = (ImageButton) findViewById(R.id.main_ibtn_play);
-		imgBtn_Previous = (ImageButton) findViewById(R.id.main_ibtn_pre);
-		imgBtn_Next = (ImageButton) findViewById(R.id.main_ibtn_next);
-		imgBtn_Stop = (ImageButton) findViewById(R.id.main_ibtn_stop);
-		seekBar = (SeekBar) findViewById(R.id.main_seekBar);
-		root_Layout = (RelativeLayout) findViewById(R.id.relativeLayout1);
-	}
+    // æ˜¾ç¤ºç»„ä»¶
+    private TextView tv_current_time;
+    private TextView tv_total_time;
+    private ImageButton imgBtn_Previous;
+    private ImageButton imgBtn_PlayOrPause;
+    private ImageButton imgBtn_Stop;
+    private ImageButton imgBtn_Next;
+    private SeekBar seekBar;
+    private ListView listView;
+    private RelativeLayout root_Layout;
 
-	/** ÎªÏÔÊ¾×é¼ş×¢²á¼àÌıÆ÷ */
-	private void registerListeners() {
-		imgBtn_Previous.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				sendBroadcastOnCommand(MusicService.COMMAND_PREVIOUS);
-			}
-		});
-		imgBtn_PlayOrPause.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				switch (status) {
-				case MusicService.STATUS_PLAYING:
-					sendBroadcastOnCommand(MusicService.COMMAND_PAUSE);
-					break;
-				case MusicService.STATUS_PAUSED:
-					sendBroadcastOnCommand(MusicService.COMMAND_RESUME);
-					break;
-				case MusicService.COMMAND_STOP:
-					sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
-				default:
-					break;
-				}
-			}
-		});
-		imgBtn_Stop.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				sendBroadcastOnCommand(MusicService.COMMAND_STOP);
-			}
-		});
-		imgBtn_Next.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				sendBroadcastOnCommand(MusicService.COMMAND_NEXT);
-			}
-		});
-		listView.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				number = position;
-				sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
-			}
-		});
-		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				if (status == MusicService.STATUS_PLAYING) {
-					// ·¢ËÍ¹ã²¥¸øMusicService£¬Ö´ĞĞÌø×ª
-					sendBroadcastOnCommand(MusicService.COMMAND_SEEK_TO);
-					// ½ø¶ÈÌõ»Ö¸´ÒÆ¶¯
-					seekBarHandler.sendEmptyMessageDelayed(PROGRESS_INCREASE,
-							1000);
-				}
-			}
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-				// ½ø¶ÈÌõÔİÍ£ÒÆ¶¯
-				seekBarHandler.sendEmptyMessage(PROGRESS_PAUSE);
-			}
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,
-					boolean fromUser) {
-				if (status != MusicService.STATUS_STOPPED) {
-					curent_time = progress;
-					// ¸üĞÂÎÄ±¾
-					tv_current_time.setText(formatTime(curent_time));
-				}
-			}
-		});
-	}
-	/**³õÊ¼»¯ÒôÀÖÁĞ±í¶ÔÏó*/
-	private void initMusicList() {
-		
-		musicArrayList = MusicList.getMusicList();
-		//±ÜÃâÖØ¸´Ìí¼ÓÒôÀÖ
-		if(musicArrayList.isEmpty())
-		{
-			Cursor mMusicCursor = this.getContentResolver().query(
-					MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null, null, null,
-					MediaStore.Audio.AudioColumns.TITLE);
-			//±êÌâ
-			int indexTitle = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.TITLE);
-			//ÒÕÊõ¼Ò
-			int indexArtist = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.ARTIST);
-			//×ÜÊ±³¤
-			int indexTotalTime = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DURATION);
-			//Â·¾¶
-			int indexPath = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATA);
+    // å½“å‰æ­Œæ›²çš„æŒç»­æ—¶é—´å’Œå½“å‰ä½ç½®ï¼Œä½œç”¨äºè¿›åº¦æ¡
+    private int total_time;
+    private int curent_time;
+    // å½“å‰æ­Œæ›²çš„åºå·ï¼Œä¸‹æ ‡ä»0å¼€å§‹
+    private int number;
+    // æ’­æ”¾çŠ¶æ€
+    private int status;
+    // å¹¿æ’­æ¥æ”¶å™¨
+    private StatusChangedReceiver receiver;
+    // æ›´æ–°è¿›åº¦æ¡çš„Handler
+    private Handler seekBarHandler;
 
-			/**Í¨¹ımMusicCursorÓÎ±ê±éÀúÊı¾İ¿â£¬²¢½«MusicÀà¶ÔÏó¼ÓÔØ´øArrayListÖĞ*/
-			for (mMusicCursor.moveToFirst(); !mMusicCursor.isAfterLast(); mMusicCursor
-					.moveToNext()) { 
-				String strTitle = mMusicCursor.getString(indexTitle);
-				String strArtist = mMusicCursor.getString(indexArtist);
-				String strTotoalTime = mMusicCursor.getString(indexTotalTime);
-				String strPath = mMusicCursor.getString(indexPath);
+    //æ­Œæ›²åˆ—è¡¨å¯¹è±¡
+    private ArrayList<Music> musicArrayList;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
 
-				if (strArtist.equals("<unknown>"))
-					strArtist = "ÎŞÒÕÊõ¼Ò";
-				Music music = new Music(strTitle, strArtist, strPath, strTotoalTime);
-				musicArrayList.add(music);
-			}
-		}
-	}
-	/**ÉèÖÃÊÊÅäÆ÷²¢³õÊ¼»¯listView*/
-	private void initListView() {
-		List<Map<String, String>> list_map = new ArrayList<Map<String, String>>();
-		HashMap<String, String> map;
-		SimpleAdapter simpleAdapter;
-		for (Music music : musicArrayList) {
-			map = new HashMap<String, String>();
-			map.put("musicName", music.getmusicName());
-			map.put("musicArtist", music.getmusicArtist());
-			list_map.add(map);
-		}
+        findViews();
+        registerListeners();
+        initMusicList();
+        initListView();
+        checkMusicfile();
 
-		String[] from = new String[] { "musicName", "musicArtist" };
-		int[] to = { R.id.listview_tv_title_item, R.id.listview_tv_artist_item };
+        startService(new Intent(this, MusicService.class));
+        // ç»‘å®šå¹¿æ’­æ¥æ”¶å™¨ï¼Œå¯ä»¥æ¥æ”¶å¹¿æ’­
+        bindStatusChangedReceiver();
+        sendBroadcastOnCommand(MusicService.COMMAND_CHECK_IS_PLAYING);
+        // åˆå§‹åŒ–è¿›åº¦æ¡çš„Handler
+        initSeekBarHandler();
+        status = MusicService.COMMAND_STOP;
 
-		simpleAdapter = new SimpleAdapter(this, list_map, R.layout.listview,from, to);
-		listView.setAdapter(simpleAdapter);
-	}
-	
-	/**Èç¹ûÁĞ±íÃ»ÓĞ¸èÇú£¬Ôò²¥·Å°´Å¥²»¿ÉÓÃ£¬²¢ÌáĞÑÓÃ»§*/
-	private void checkMusicfile()
-	{
-		if (musicArrayList.isEmpty()) {
-			imgBtn_Next.setEnabled(false);
-			imgBtn_PlayOrPause.setEnabled(false);
-			imgBtn_Previous.setEnabled(false);
-			imgBtn_Stop.setEnabled(false);
-			Toast.makeText(getApplicationContext(), "µ±Ç°Ã»ÓĞ¸èÇúÎÄ¼ş",Toast.LENGTH_SHORT).show();
-		} else {
-			imgBtn_Next.setEnabled(true);
-			imgBtn_PlayOrPause.setEnabled(true);
-			imgBtn_Previous.setEnabled(true);
-			imgBtn_Stop.setEnabled(true);
-		}
-	}
-	/** °ó¶¨¹ã²¥½ÓÊÕÆ÷ */
-	private void bindStatusChangedReceiver() {
-		receiver = new StatusChangedReceiver();
-		IntentFilter filter = new IntentFilter(
-				MusicService.BROADCAST_MUSICSERVICE_UPDATE_STATUS);
-		registerReceiver(receiver, filter);
-	}
+        //é»˜è®¤æ’­æ”¾æ¨¡å¼æ˜¯é¡ºåºæ’­æ”¾
+        playmode = MainActivity.MODE_LIST_SEQUENCE;
+    }
 
-	private void initSeekBarHandler() {
-		seekBarHandler = new Handler() {
-			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
+    void findViews() {
+        listView = (ListView) findViewById(R.id.main_listview);
+        tv_current_time = (TextView) findViewById(R.id.main_tv_curtime);
+        tv_total_time = (TextView) findViewById(R.id.main_tv_totaltime);
+        imgBtn_Previous = (ImageButton) findViewById(R.id.main_ibtn_pre);
+        imgBtn_PlayOrPause = (ImageButton) findViewById(R.id.main_ibtn_play);
+        imgBtn_Previous = (ImageButton) findViewById(R.id.main_ibtn_pre);
+        imgBtn_Next = (ImageButton) findViewById(R.id.main_ibtn_next);
+        imgBtn_Stop = (ImageButton) findViewById(R.id.main_ibtn_stop);
+        seekBar = (SeekBar) findViewById(R.id.main_seekBar);
+        root_Layout = (RelativeLayout) findViewById(R.id.relativeLayout1);
+    }
 
-				switch (msg.what) {
-				case PROGRESS_INCREASE:
-					if (seekBar.getProgress() < total_time) {
-						// ½ø¶ÈÌõÇ°½ø1Ãë
-						seekBar.incrementProgressBy(1000);
-						seekBarHandler.sendEmptyMessageDelayed(
-								PROGRESS_INCREASE, 1000);
-						// ĞŞ¸ÄÏÔÊ¾µ±Ç°½ø¶ÈµÄÎÄ±¾
-						tv_current_time.setText(formatTime(curent_time));
-						curent_time += 1000;
-					}
-					break;
-				case PROGRESS_PAUSE:
-					seekBarHandler.removeMessages(PROGRESS_INCREASE);
-					break;
-				case PROGRESS_RESET:
-					// ÖØÖÃ½ø¶ÈÌõ½çÃæ
-					seekBarHandler.removeMessages(PROGRESS_INCREASE);
-					seekBar.setProgress(0);
-					tv_current_time.setText("00:00");
-					break;
-				}
-			}
-		};
-	}
-	/** ·¢ËÍÃüÁî£¬¿ØÖÆÒôÀÖ²¥·Å¡£²ÎÊı¶¨ÒåÔÚMusicServiceÀàÖĞ */
-	private void sendBroadcastOnCommand(int command) {
+    /** ä¸ºæ˜¾ç¤ºç»„ä»¶æ³¨å†Œç›‘å¬å™¨ */
+    private void registerListeners() {
+        imgBtn_Previous.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                sendBroadcastOnCommand(MusicService.COMMAND_PREVIOUS);
+            }
+        });
+        imgBtn_PlayOrPause.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                switch (status) {
+                    case MusicService.STATUS_PLAYING:
+                        sendBroadcastOnCommand(MusicService.COMMAND_PAUSE);
+                        break;
+                    case MusicService.STATUS_PAUSED:
+                        sendBroadcastOnCommand(MusicService.COMMAND_RESUME);
+                        break;
+                    case MusicService.COMMAND_STOP:
+                        sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
+                    default:
+                        break;
+                }
+            }
+        });
+        imgBtn_Stop.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                sendBroadcastOnCommand(MusicService.COMMAND_STOP);
+            }
+        });
+        imgBtn_Next.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                sendBroadcastOnCommand(MusicService.COMMAND_NEXT);
+            }
+        });
+        listView.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                number = position;
+                sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
+            }
+        });
+        seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (status == MusicService.STATUS_PLAYING) {
+                    // å‘é€å¹¿æ’­ç»™MusicServiceï¼Œæ‰§è¡Œè·³è½¬
+                    sendBroadcastOnCommand(MusicService.COMMAND_SEEK_TO);
+                    // è¿›åº¦æ¡æ¢å¤ç§»åŠ¨
+                    seekBarHandler.sendEmptyMessageDelayed(PROGRESS_INCREASE,
+                            1000);
+                }
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // è¿›åº¦æ¡æš‚åœç§»åŠ¨
+                seekBarHandler.sendEmptyMessage(PROGRESS_PAUSE);
+            }
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                                          boolean fromUser) {
+                if (status != MusicService.STATUS_STOPPED) {
+                    curent_time = progress;
+                    // æ›´æ–°æ–‡æœ¬
+                    tv_current_time.setText(formatTime(curent_time));
+                }
+            }
+        });
+    }
+    /**åˆå§‹åŒ–éŸ³ä¹åˆ—è¡¨å¯¹è±¡*/
+    private void initMusicList() {
 
-		Intent intent = new Intent(MusicService.BROADCAST_MUSICSERVICE_CONTROL);
-		intent.putExtra("command", command);
-		// ¸ù¾İ²»Í¬ÃüÁî£¬·â×°²»Í¬µÄÊı¾İ
-		switch (command) {
-		case MusicService.COMMAND_PLAY:
-			intent.putExtra("number", number);
-			break;
-		case MusicService.COMMAND_SEEK_TO:
-			intent.putExtra("time", curent_time);
-			break;
-		case MusicService.COMMAND_PREVIOUS:
-		case MusicService.COMMAND_NEXT:
-		case MusicService.COMMAND_PAUSE:
-		case MusicService.COMMAND_STOP:
-		case MusicService.COMMAND_RESUME:
-		default:
-			break;
-		}
-		sendBroadcast(intent);
-	}
+        musicArrayList = MusicList.getMusicList();
+        //é¿å…é‡å¤æ·»åŠ éŸ³ä¹
+        if(musicArrayList.isEmpty())
+        {
+            Cursor mMusicCursor = this.getContentResolver().query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null, null, null,
+                    MediaStore.Audio.AudioColumns.TITLE);
+            //æ ‡é¢˜
+            int indexTitle = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.TITLE);
+            //è‰ºæœ¯å®¶
+            int indexArtist = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.ARTIST);
+            //æ€»æ—¶é•¿
+            int indexTotalTime = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DURATION);
+            //è·¯å¾„
+            int indexPath = mMusicCursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATA);
 
-	/** ÄÚ²¿Àà£¬ÓÃÓÚ²¥·ÅÆ÷×´Ì¬¸üĞÂµÄ½ÓÊÕ¹ã²¥ */
-	class StatusChangedReceiver extends BroadcastReceiver {
-		public void onReceive(Context context, Intent intent) {
-			// »ñÈ¡²¥·ÅÆ÷×´Ì¬
-			status = intent.getIntExtra("status", -1);
-			switch (status) {
-			case MusicService.STATUS_PLAYING:
-				String musicName = intent.getStringExtra("musicName");
-				String musicArtist = intent.getStringExtra("musicArtist");
+            /**é€šè¿‡mMusicCursoræ¸¸æ ‡éå†æ•°æ®åº“ï¼Œå¹¶å°†Musicç±»å¯¹è±¡åŠ è½½å¸¦ArrayListä¸­*/
+            for (mMusicCursor.moveToFirst(); !mMusicCursor.isAfterLast(); mMusicCursor
+                    .moveToNext()) {
+                String strTitle = mMusicCursor.getString(indexTitle);
+                String strArtist = mMusicCursor.getString(indexArtist);
+                String strTotoalTime = mMusicCursor.getString(indexTotalTime);
+                String strPath = mMusicCursor.getString(indexPath);
 
-				seekBarHandler.removeMessages(PROGRESS_INCREASE);
-				curent_time = intent.getIntExtra("time", 0);
-				total_time = intent.getIntExtra("duration", 0);
-				number = intent.getIntExtra("number", number);
-				listView.setSelection(number);
+                if (strArtist.equals("<unknown>"))
+                    strArtist = "æ— è‰ºæœ¯å®¶";
+                Music music = new Music(strTitle, strArtist, strPath, strTotoalTime);
+                musicArrayList.add(music);
+            }
+        }
+    }
+    /**è®¾ç½®é€‚é…å™¨å¹¶åˆå§‹åŒ–listView*/
+    private void initListView() {
+        List<Map<String, String>> list_map = new ArrayList<Map<String, String>>();
+        HashMap<String, String> map;
+        SimpleAdapter simpleAdapter;
+        for (Music music : musicArrayList) {
+            map = new HashMap<String, String>();
+            map.put("musicName", music.getmusicName());
+            map.put("musicArtist", music.getmusicArtist());
+            list_map.add(map);
+        }
 
-				seekBar.setProgress(curent_time);
-				seekBar.setMax(total_time);
-				seekBarHandler.sendEmptyMessageDelayed(PROGRESS_INCREASE, 1000);
+        String[] from = new String[] { "musicName", "musicArtist" };
+        int[] to = { R.id.listview_tv_title_item, R.id.listview_tv_artist_item };
 
-				tv_total_time.setText(formatTime(total_time));
-				imgBtn_PlayOrPause.setBackgroundResource(R.drawable.pause);
-				
-				// ÉèÖÃActivityµÄ±êÌâÀ¸ÎÄ×Ö£¬ÌáÊ¾ÕıÔÚ²¥·ÅµÄ¸èÇú
-				MainActivity.this.setTitle("ÕıÔÚ²¥·Å:" + musicName + " "+ musicArtist);
-				break;
-			case MusicService.STATUS_PAUSED:
-				seekBarHandler.sendEmptyMessage(PROGRESS_PAUSE);
-				String string = MainActivity.this.getTitle().toString().replace("ÕıÔÚ²¥·Å:", "ÒÑÔİÍ£:");
-				MainActivity.this.setTitle(string);
-				imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
-				break;
-			case MusicService.STATUS_STOPPED:
-				curent_time = 0;
-				total_time = 0;
-				tv_current_time.setText(formatTime(curent_time));
-				tv_total_time.setText(formatTime(total_time));
-				seekBarHandler.sendEmptyMessage(PROGRESS_RESET);
-				MainActivity.this.setTitle("GracePlayer");
-				imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
-				break;
-			case MusicService.STATUS_COMPLETED:
-				number = intent.getIntExtra("number", 0);
-				if(number == MusicList.getMusicList().size()-1) 
-				{
-					sendBroadcastOnCommand(MusicService.STATUS_STOPPED);
-				}
-				else
-				{
-					sendBroadcastOnCommand(MusicService.COMMAND_NEXT);
-				}
-				
-				seekBarHandler.sendEmptyMessage(PROGRESS_RESET);
-				MainActivity.this.setTitle("GracePlayer");
-				imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
-				break;
-			default:
-				break;
-			}
-		}
-	}
+        simpleAdapter = new SimpleAdapter(this, list_map, R.layout.listview,from, to);
+        listView.setAdapter(simpleAdapter);
+    }
 
-	/** ¸ñÊ½»¯£ººÁÃë -> "mm:ss" */
-	private String formatTime(int msec) {
-		int minute = (msec / 1000) / 60;
-		int second = (msec / 1000) % 60;
-		String minuteString;
-		String secondString;
-		if (minute < 10) {
-			minuteString = "0" + minute;
-		} else {
-			minuteString = "" + minute;
-		}
-		if (second < 10) {
-			secondString = "0" + second;
-		} else {
-			secondString = "" + second;
-		}
-		return minuteString + ":" + secondString;
-	}
+    /**å¦‚æœåˆ—è¡¨æ²¡æœ‰æ­Œæ›²ï¼Œåˆ™æ’­æ”¾æŒ‰é’®ä¸å¯ç”¨ï¼Œå¹¶æé†’ç”¨æˆ·*/
+    private void checkMusicfile()
+    {
+        if (musicArrayList.isEmpty()) {
+            imgBtn_Next.setEnabled(false);
+            imgBtn_PlayOrPause.setEnabled(false);
+            imgBtn_Previous.setEnabled(false);
+            imgBtn_Stop.setEnabled(false);
+            Toast.makeText(getApplicationContext(), "å½“å‰æ²¡æœ‰æ­Œæ›²æ–‡ä»¶",Toast.LENGTH_SHORT).show();
+        } else {
+            imgBtn_Next.setEnabled(true);
+            imgBtn_PlayOrPause.setEnabled(true);
+            imgBtn_Previous.setEnabled(true);
+            imgBtn_Stop.setEnabled(true);
+        }
+    }
+    /** ç»‘å®šå¹¿æ’­æ¥æ”¶å™¨ */
+    private void bindStatusChangedReceiver() {
+        receiver = new StatusChangedReceiver();
+        IntentFilter filter = new IntentFilter(
+                MusicService.BROADCAST_MUSICSERVICE_UPDATE_STATUS);
+        registerReceiver(receiver, filter);
+    }
 
-	/** ÉèÖÃActivityµÄÖ÷Ìâ£¬°üÀ¨ĞŞ¸Ä±³¾°Í¼Æ¬µÈ */
-	private void setTheme(String theme) {
-		if ("²ÊÉ«".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_color);
-		} else if ("»¨¶ä".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_digit_flower);
-		} else if ("ÈºÉ½".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_mountain);
-		} else if ("Ğ¡¹·".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_running_dog);
-		} else if ("±ùÑ©".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_snow);
-		} else if ("Å®º¢".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_music_girl);
-		} else if ("ëüëÊ".equals(theme)) {
-			root_Layout.setBackgroundResource(R.drawable.bg_blur);
-		}
-	}
+    private void initSeekBarHandler() {
+        seekBarHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
 
-	@Override
-	protected void onResume() {
-		// TODO Auto-generated method stub
-		super.onResume();
-		
-		// ¼ì²é²¥·ÅÆ÷ÊÇ·ñÕıÔÚ²¥·Å¡£Èç¹ûÕıÔÚ²¥·Å£¬ÒÔÉÏ°ó¶¨µÄ½ÓÊÕÆ÷»á¸Ä±äUI
-		sendBroadcastOnCommand(MusicService.COMMAND_CHECK_IS_PLAYING);
-		PropertyBean property = new PropertyBean(MainActivity.this);
-		String theme = property.getTheme();
-		// ÉèÖÃActivityµÄÖ÷Ìâ
-		setTheme(theme);
-	}
+                switch (msg.what) {
+                    case PROGRESS_INCREASE:
+                        if (seekBar.getProgress() < total_time) {
+                            // è¿›åº¦æ¡å‰è¿›1ç§’
+                            seekBar.incrementProgressBy(1000);
+                            seekBarHandler.sendEmptyMessageDelayed(
+                                    PROGRESS_INCREASE, 1000);
+                            // ä¿®æ”¹æ˜¾ç¤ºå½“å‰è¿›åº¦çš„æ–‡æœ¬
+                            tv_current_time.setText(formatTime(curent_time));
+                            curent_time += 1000;
+                        }
+                        break;
+                    case PROGRESS_PAUSE:
+                        seekBarHandler.removeMessages(PROGRESS_INCREASE);
+                        break;
+                    case PROGRESS_RESET:
+                        // é‡ç½®è¿›åº¦æ¡ç•Œé¢
+                        seekBarHandler.removeMessages(PROGRESS_INCREASE);
+                        seekBar.setProgress(0);
+                        tv_current_time.setText("00:00");
+                        break;
+                }
+            }
+        };
+    }
+    /** å‘é€å‘½ä»¤ï¼Œæ§åˆ¶éŸ³ä¹æ’­æ”¾ã€‚å‚æ•°å®šä¹‰åœ¨MusicServiceç±»ä¸­ */
+    private void sendBroadcastOnCommand(int command) {
 
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		if (status == MusicService.STATUS_STOPPED) {
-			stopService(new Intent(this, MusicService.class));
-		}
-		super.onDestroy();
-	}
+        Intent intent = new Intent(MusicService.BROADCAST_MUSICSERVICE_CONTROL);
+        intent.putExtra("command", command);
+        // æ ¹æ®ä¸åŒå‘½ä»¤ï¼Œå°è£…ä¸åŒçš„æ•°æ®
+        switch (command) {
+            case MusicService.COMMAND_PLAY:
+                intent.putExtra("number", number);
+                break;
+            case MusicService.COMMAND_SEEK_TO:
+                intent.putExtra("time", curent_time);
+                break;
+            case MusicService.COMMAND_PREVIOUS:
+            case MusicService.COMMAND_NEXT:
+            case MusicService.COMMAND_PAUSE:
+            case MusicService.COMMAND_STOP:
+            case MusicService.COMMAND_RESUME:
+            default:
+                break;
+        }
+        sendBroadcast(intent);
+    }
 
-	/** ´´½¨²Ëµ¥ */
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		
-		getMenuInflater().inflate(R.menu.main, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
+    /** å†…éƒ¨ç±»ï¼Œç”¨äºæ’­æ”¾å™¨çŠ¶æ€æ›´æ–°çš„æ¥æ”¶å¹¿æ’­ */
+    class StatusChangedReceiver extends BroadcastReceiver {
+        public void onReceive(Context context, Intent intent) {
+            // è·å–æ’­æ”¾å™¨çŠ¶æ€
+            status = intent.getIntExtra("status", -1);
+            switch (status) {
+                case MusicService.STATUS_PLAYING:
+                    String musicName = intent.getStringExtra("musicName");
+                    String musicArtist = intent.getStringExtra("musicArtist");
 
-	/** ´¦Àí²Ëµ¥µã»÷ÊÂ¼ş */
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.menu_theme:
-			// ÏÔÊ¾ÁĞ±í¶Ô»°¿ò
-			new AlertDialog.Builder(this)
-					.setTitle("ÇëÑ¡ÔñÖ÷Ìâ")
-					.setItems(R.array.theme,
-							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int which) {
-									// »ñÈ¡ÔÚarray.xmlÖĞ¶¨ÒåµÄÖ÷ÌâÃû³Æ
-									String theme = PropertyBean.THEMES[which];
-									// ÉèÖÃActivityµÄÖ÷Ìâ
-									setTheme(theme);
-									// ±£´æÑ¡ÔñµÄÖ÷Ìâ
-									PropertyBean property = new PropertyBean(
-											MainActivity.this);
-									property.setAndSaveTheme(theme);
-								}
-							}).show();
-			break;
-		case R.id.menu_about:
-			// ÏÔÊ¾ÎÄ±¾¶Ô»°¿ò
-			new AlertDialog.Builder(MainActivity.this).setTitle("GracePlayer")
-					.setMessage(R.string.about).show();
-			break;
-		case R.id.menu_quit:
-			//ÍË³ö³ÌĞò
-			new AlertDialog.Builder(MainActivity.this).setTitle("ÌáÊ¾")
-			.setMessage(R.string.quit_message).setPositiveButton("È·¶¨", new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface arg0, int arg1) {
-					// TODO Auto-generated method stub
-					System.exit(0);
-				}
-			}).setNegativeButton("È¡Ïû", new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface arg0, int arg1) {
-					// TODO Auto-generated method stub
-					
-				}
-			}).show();
-			break;
-		}
-		return super.onOptionsItemSelected(item);
-	}
+                    seekBarHandler.removeMessages(PROGRESS_INCREASE);
+                    curent_time = intent.getIntExtra("time", 0);
+                    total_time = intent.getIntExtra("duration", 0);
+                    number = intent.getIntExtra("number", number);
+                    listView.setSelection(number);
+
+                    seekBar.setProgress(curent_time);
+                    seekBar.setMax(total_time);
+                    seekBarHandler.sendEmptyMessageDelayed(PROGRESS_INCREASE, 1000);
+
+                    tv_total_time.setText(formatTime(total_time));
+                    imgBtn_PlayOrPause.setBackgroundResource(R.drawable.pause);
+
+                    // è®¾ç½®Activityçš„æ ‡é¢˜æ æ–‡å­—ï¼Œæç¤ºæ­£åœ¨æ’­æ”¾çš„æ­Œæ›²
+                    MainActivity.this.setTitle("æ­£åœ¨æ’­æ”¾:" + musicName + " "+ musicArtist);
+                    break;
+                case MusicService.STATUS_PAUSED:
+                    seekBarHandler.sendEmptyMessage(PROGRESS_PAUSE);
+                    String string = MainActivity.this.getTitle().toString().replace("æ­£åœ¨æ’­æ”¾:", "å·²æš‚åœ:");
+                    MainActivity.this.setTitle(string);
+                    imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
+                    break;
+                case MusicService.STATUS_STOPPED:
+                    curent_time = 0;
+                    total_time = 0;
+                    tv_current_time.setText(formatTime(curent_time));
+                    tv_total_time.setText(formatTime(total_time));
+                    seekBarHandler.sendEmptyMessage(PROGRESS_RESET);
+                    MainActivity.this.setTitle("GracePlayer");
+                    imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
+                    break;
+                case MusicService.STATUS_COMPLETED:
+                    number = intent.getIntExtra("number", 0);
+                    if(playmode == MainActivity.MODE_LIST_SEQUENCE)										//é¡ºåºæ¨¡å¼ï¼šåˆ°è¾¾åˆ—è¡¨æœ«ç«¯æ—¶å‘é€åœæ­¢å‘½ä»¤ï¼Œå¦åˆ™æ’­æ”¾ä¸‹ä¸€é¦–
+                    {
+                        if(number == MusicList.getMusicList().size()-1)
+                            sendBroadcastOnCommand(MusicService.STATUS_STOPPED);
+                        else
+                            sendBroadcastOnCommand(MusicService.COMMAND_NEXT);
+                    }
+                    else if(playmode == MainActivity.MODE_SINGLE_CYCLE)								//å•æ›²å¾ªç¯
+                        sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
+                    else if(playmode == MainActivity.MODE_LIST_CYCLE)										//åˆ—è¡¨å¾ªç¯ï¼šåˆ°è¾¾åˆ—è¡¨æœ«ç«¯æ—¶ï¼ŒæŠŠè¦æ’­æ”¾çš„éŸ³ä¹è®¾ç½®ä¸ºç¬¬ä¸€é¦–ï¼Œ
+                    {																															//					ç„¶åå‘é€æ’­æ”¾å‘½ä»¤ã€‚
+                        if(number == musicArrayList.size()-1)
+                        {
+                            number = 0;
+                            sendBroadcastOnCommand(MusicService.COMMAND_PLAY);
+                        }
+                        else sendBroadcastOnCommand(MusicService.COMMAND_NEXT);
+                    }
+
+
+                    seekBarHandler.sendEmptyMessage(PROGRESS_RESET);
+                    MainActivity.this.setTitle("GracePlayer");
+                    imgBtn_PlayOrPause.setBackgroundResource(R.drawable.play);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    /** æ ¼å¼åŒ–ï¼šæ¯«ç§’ -> "mm:ss" */
+    private String formatTime(int msec) {
+        int minute = (msec / 1000) / 60;
+        int second = (msec / 1000) % 60;
+        String minuteString;
+        String secondString;
+        if (minute < 10) {
+            minuteString = "0" + minute;
+        } else {
+            minuteString = "" + minute;
+        }
+        if (second < 10) {
+            secondString = "0" + second;
+        } else {
+            secondString = "" + second;
+        }
+        return minuteString + ":" + secondString;
+    }
+
+    /** è®¾ç½®Activityçš„ä¸»é¢˜ï¼ŒåŒ…æ‹¬ä¿®æ”¹èƒŒæ™¯å›¾ç‰‡ç­‰ */
+    private void setTheme(String theme) {
+        if ("å½©è‰²".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_color);
+        } else if ("èŠ±æœµ".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_digit_flower);
+        } else if ("ç¾¤å±±".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_mountain);
+        } else if ("å°ç‹—".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_running_dog);
+        } else if ("å†°é›ª".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_snow);
+        } else if ("å¥³å­©".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_music_girl);
+        } else if ("æœ¦èƒ§".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_blur);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        // TODO Auto-generated method stub
+        super.onResume();
+
+        // æ£€æŸ¥æ’­æ”¾å™¨æ˜¯å¦æ­£åœ¨æ’­æ”¾ã€‚å¦‚æœæ­£åœ¨æ’­æ”¾ï¼Œä»¥ä¸Šç»‘å®šçš„æ¥æ”¶å™¨ä¼šæ”¹å˜UI
+        sendBroadcastOnCommand(MusicService.COMMAND_CHECK_IS_PLAYING);
+        PropertyBean property = new PropertyBean(MainActivity.this);
+        String theme = property.getTheme();
+        // è®¾ç½®Activityçš„ä¸»é¢˜
+        setTheme(theme);
+    }
+
+    @Override
+    protected void onDestroy() {
+        // TODO Auto-generated method stub
+        if (status == MusicService.STATUS_STOPPED) {
+            stopService(new Intent(this, MusicService.class));
+        }
+        super.onDestroy();
+    }
+
+    /** åˆ›å»ºèœå• */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /** å¤„ç†èœå•ç‚¹å‡»äº‹ä»¶ */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_theme:
+                // æ˜¾ç¤ºåˆ—è¡¨å¯¹è¯æ¡†
+                new AlertDialog.Builder(this)
+                        .setTitle("è¯·é€‰æ‹©ä¸»é¢˜")
+                        .setItems(R.array.theme,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,
+                                                        int which) {
+                                        // è·å–åœ¨array.xmlä¸­å®šä¹‰çš„ä¸»é¢˜åç§°
+                                        String theme = PropertyBean.THEMES[which];
+                                        // è®¾ç½®Activityçš„ä¸»é¢˜
+                                        setTheme(theme);
+                                        // ä¿å­˜é€‰æ‹©çš„ä¸»é¢˜
+                                        PropertyBean property = new PropertyBean(
+                                                MainActivity.this);
+                                        property.setAndSaveTheme(theme);
+                                    }
+                                }).show();
+                break;
+            case R.id.menu_about:
+                // æ˜¾ç¤ºæ–‡æœ¬å¯¹è¯æ¡†
+                new AlertDialog.Builder(MainActivity.this).setTitle("GracePlayer")
+                        .setMessage(R.string.about).show();
+                break;
+            case R.id.menu_quit:
+                //é€€å‡ºç¨‹åº
+                new AlertDialog.Builder(MainActivity.this).setTitle("æç¤º")
+                        .setMessage(R.string.quit_message).setPositiveButton("ç¡®å®š", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        // TODO Auto-generated method stub
+                        System.exit(0);
+                    }
+                }).setNegativeButton("å–æ¶ˆ", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        // TODO Auto-generated method stub
+
+                    }
+                }).show();
+                break;
+                case R.id.menu_playmode:
+                    String[] mode = new String[] { "é¡ºåºæ’­æ”¾", "å•æ›²å¾ªç¯", "åˆ—è¡¨å¾ªç¯" };
+                    AlertDialog.Builder builder = new AlertDialog.Builder(
+                            MainActivity.this);
+                    builder.setTitle("æ’­æ”¾æ¨¡å¼");
+                    builder.setSingleChoiceItems(mode, playmode,						//è®¾ç½®å•é€‰é¡¹ï¼Œè¿™é‡Œç¬¬äºŒä¸ªå‚æ•°æ˜¯é»˜è®¤é€‰æ‹©çš„åºå·ï¼Œè¿™é‡Œæ ¹æ®playmodeçš„å€¼æ¥ç¡®å®š
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface arg0, int arg1) {
+                                    // TODO Auto-generated method stub
+                                    playmode = arg1;
+                                }
+                            });
+                    builder.setPositiveButton("ç¡®å®š",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface arg0, int arg1) {
+                                    // TODO Auto-generated method stub
+                                    switch (playmode) {
+                                        case 0:
+                                            playmode = MainActivity.MODE_LIST_SEQUENCE;
+                                            Toast.makeText(getApplicationContext(), R.string.sequence, Toast.LENGTH_SHORT).show();
+                                            break;
+                                        case 1:
+                                            playmode = MainActivity.MODE_SINGLE_CYCLE;
+                                            Toast.makeText(getApplicationContext(), R.string.singlecycle, Toast.LENGTH_SHORT).show();
+                                            break;
+                                        case 2:
+                                            playmode = MainActivity.MODE_LIST_CYCLE;
+                                            Toast.makeText(getApplicationContext(), R.string.listcycle, Toast.LENGTH_SHORT).show();
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            });
+                    builder.create().show();
+                    break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
 }

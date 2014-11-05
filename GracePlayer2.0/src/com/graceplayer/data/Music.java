@@ -1,39 +1,39 @@
 package com.graceplayer.data;
 
 /*
- * MusicÀà£¬°üÀ¨¸èÇúÃû£¬ÒÕÊõ¼Ò£¬Â·¾¶£¬Ê±³¤µÈÊôĞÔ£¬
- * ÒÔ¼°Ïà¹ØµÄ»ñÈ¡·½·¨
+ * Musicç±»ï¼ŒåŒ…æ‹¬æ­Œæ›²åï¼Œè‰ºæœ¯å®¶ï¼Œè·¯å¾„ï¼Œæ—¶é•¿ç­‰å±æ€§ï¼Œ
+ * ä»¥åŠç›¸å…³çš„è·å–æ–¹æ³•
  * */
 public class Music {
 
-	private String musicName;
-	private String musicArtist;
-	private String musicPath;
-	private String musicDuration;
-	
-	public Music (String musicName,String musicArtist,String musicPath,String musicDuration)
-	{
-		this.musicName = musicName;
-		this.musicArtist = musicArtist;
-		this.musicPath = musicPath;
-		this.musicDuration = musicDuration;
-	}
-	public String getmusicName()
-	{
-		return this.musicName;
-	}
-	public String getmusicArtist()
-	{
-		return this.musicArtist;
-	}
-	public String getmusicPath()
-	{
-		return this.musicPath;
-	}
-	public String getmusicDuration()
-	{
-		return this.musicDuration;
-	}
-	
-	
+    private String musicName;
+    private String musicArtist;
+    private String musicPath;
+    private String musicDuration;
+
+    public Music (String musicName,String musicArtist,String musicPath,String musicDuration)
+    {
+        this.musicName = musicName;
+        this.musicArtist = musicArtist;
+        this.musicPath = musicPath;
+        this.musicDuration = musicDuration;
+    }
+    public String getmusicName()
+    {
+        return this.musicName;
+    }
+    public String getmusicArtist()
+    {
+        return this.musicArtist;
+    }
+    public String getmusicPath()
+    {
+        return this.musicPath;
+    }
+    public String getmusicDuration()
+    {
+        return this.musicDuration;
+    }
+
+
 }

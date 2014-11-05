@@ -12,212 +12,212 @@ import android.os.IBinder;
 import android.widget.Toast;
 
 public class MusicService extends Service {
-	// ²¥·Å¿ØÖÆÃüÁî£¬±êÊ¶²Ù×÷
-	public static final int COMMAND_UNKNOWN = -1;
-	public static final int COMMAND_PLAY = 0;
-	public static final int COMMAND_PAUSE = 1;
-	public static final int COMMAND_STOP = 2;
-	public static final int COMMAND_RESUME = 3;
-	public static final int COMMAND_PREVIOUS = 4;
-	public static final int COMMAND_NEXT = 5;
-	public static final int COMMAND_CHECK_IS_PLAYING = 6;
-	public static final int COMMAND_SEEK_TO = 7;
-	// ²¥·ÅÆ÷×´Ì¬
-	public static final int STATUS_PLAYING = 0;
-	public static final int STATUS_PAUSED = 1;
-	public static final int STATUS_STOPPED = 2;
-	public static final int STATUS_COMPLETED = 3;
-	// ¹ã²¥±êÊ¶
-	public static final String BROADCAST_MUSICSERVICE_CONTROL = "MusicService.ACTION_CONTROL";
-	public static final String BROADCAST_MUSICSERVICE_UPDATE_STATUS = "MusicService.ACTION_UPDATE";
-	// ¹ã²¥½ÓÊÕÆ÷
-	private CommandReceiver receiver;
-	private int status;
-	// Ã½Ìå²¥·ÅÀà
-	private MediaPlayer player = new MediaPlayer();
-	//¸èÇúĞòºÅ£¬´Ó0¿ªÊ¼
-	private int number = 0;
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
-	}
+    // æ’­æ”¾æ§åˆ¶å‘½ä»¤ï¼Œæ ‡è¯†æ“ä½œ
+    public static final int COMMAND_UNKNOWN = -1;
+    public static final int COMMAND_PLAY = 0;
+    public static final int COMMAND_PAUSE = 1;
+    public static final int COMMAND_STOP = 2;
+    public static final int COMMAND_RESUME = 3;
+    public static final int COMMAND_PREVIOUS = 4;
+    public static final int COMMAND_NEXT = 5;
+    public static final int COMMAND_CHECK_IS_PLAYING = 6;
+    public static final int COMMAND_SEEK_TO = 7;
+    // æ’­æ”¾å™¨çŠ¶æ€
+    public static final int STATUS_PLAYING = 0;
+    public static final int STATUS_PAUSED = 1;
+    public static final int STATUS_STOPPED = 2;
+    public static final int STATUS_COMPLETED = 3;
+    // å¹¿æ’­æ ‡è¯†
+    public static final String BROADCAST_MUSICSERVICE_CONTROL = "MusicService.ACTION_CONTROL";
+    public static final String BROADCAST_MUSICSERVICE_UPDATE_STATUS = "MusicService.ACTION_UPDATE";
+    // å¹¿æ’­æ¥æ”¶å™¨
+    private CommandReceiver receiver;
+    private int status;
+    // åª’ä½“æ’­æ”¾ç±»
+    private MediaPlayer player = new MediaPlayer();
+    //æ­Œæ›²åºå·ï¼Œä»0å¼€å§‹
+    private int number = 0;
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		// °ó¶¨¹ã²¥½ÓÊÕÆ÷£¬¿ÉÒÔ½ÓÊÕ¹ã²¥
-		bindCommandReceiver();
-		status = MusicService.STATUS_STOPPED;
-	}
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        // ç»‘å®šå¹¿æ’­æ¥æ”¶å™¨ï¼Œå¯ä»¥æ¥æ”¶å¹¿æ’­
+        bindCommandReceiver();
+        status = MusicService.STATUS_STOPPED;
+    }
 
-	@Override
-	public void onDestroy() {
-		// ÊÍ·Å²¥·ÅÆ÷×ÊÔ´
-		if (player != null) {
-			player.release();
-		}
-		super.onDestroy();
-	}
+    @Override
+    public void onDestroy() {
+        // é‡Šæ”¾æ’­æ”¾å™¨èµ„æº
+        if (player != null) {
+            player.release();
+        }
+        super.onDestroy();
+    }
 
-	/** °ó¶¨¹ã²¥½ÓÊÕÆ÷ */
-	private void bindCommandReceiver() {
-		receiver = new CommandReceiver();
-		IntentFilter filter = new IntentFilter(BROADCAST_MUSICSERVICE_CONTROL);
-		registerReceiver(receiver, filter);
-	}
+    /** ç»‘å®šå¹¿æ’­æ¥æ”¶å™¨ */
+    private void bindCommandReceiver() {
+        receiver = new CommandReceiver();
+        IntentFilter filter = new IntentFilter(BROADCAST_MUSICSERVICE_CONTROL);
+        registerReceiver(receiver, filter);
+    }
 
-	/** ÄÚ²¿Àà£¬½ÓÊÕ¹ã²¥ÃüÁî£¬²¢Ö´ĞĞ²Ù×÷ */
-	class CommandReceiver extends BroadcastReceiver {
-		
-		public void onReceive(Context context, Intent intent) {
-			// »ñÈ¡ÃüÁî
-			int command = intent.getIntExtra("command", COMMAND_UNKNOWN);
-			// Ö´ĞĞÃüÁî
-			switch (command) {
-			case COMMAND_SEEK_TO:
-				seekTo(intent.getIntExtra("time", 0));
-				break;
-			case COMMAND_PLAY:
-				number = intent.getIntExtra("number", 0);
-				play(number);
-				break;
-			case COMMAND_PREVIOUS:
-				moveNumberToPrevious();
-				break;
-			case COMMAND_NEXT:
-				moveNumberToNext();
-				break;
-			case COMMAND_PAUSE:
-				pause();
-				break;
-			case COMMAND_STOP:
-				stop();
-				break;
-			case COMMAND_RESUME:
-				resume();
-				break;
-			case COMMAND_CHECK_IS_PLAYING:
-				if (player != null && player.isPlaying()) {
-					sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
-				}
-				break;
-			case COMMAND_UNKNOWN:
-			default:
-				break;
-			}
-		}
-	}
+    /** å†…éƒ¨ç±»ï¼Œæ¥æ”¶å¹¿æ’­å‘½ä»¤ï¼Œå¹¶æ‰§è¡Œæ“ä½œ */
+    class CommandReceiver extends BroadcastReceiver {
 
-	/** ·¢ËÍ¹ã²¥£¬ÌáĞÑ×´Ì¬¸Ä±äÁË */
-	private void sendBroadcastOnStatusChanged(int status) {
-		Intent intent = new Intent(BROADCAST_MUSICSERVICE_UPDATE_STATUS);
-		intent.putExtra("status", status);
-		if (status !=STATUS_STOPPED) {
-			
-				intent.putExtra("time", player.getCurrentPosition());
-				intent.putExtra("duration", player.getDuration());
-				intent.putExtra("number", number);
-				intent.putExtra("musicName", MusicList.getMusicList().get(number).getmusicName());
-				intent.putExtra("musicArtist", MusicList.getMusicList().get(number).getmusicArtist());
-			
-		}
-		sendBroadcast(intent);
-	}
+        public void onReceive(Context context, Intent intent) {
+            // è·å–å‘½ä»¤
+            int command = intent.getIntExtra("command", COMMAND_UNKNOWN);
+            // æ‰§è¡Œå‘½ä»¤
+            switch (command) {
+                case COMMAND_SEEK_TO:
+                    seekTo(intent.getIntExtra("time", 0));
+                    break;
+                case COMMAND_PLAY:
+                    number = intent.getIntExtra("number", 0);
+                    play(number);
+                    break;
+                case COMMAND_PREVIOUS:
+                    moveNumberToPrevious();
+                    break;
+                case COMMAND_NEXT:
+                    moveNumberToNext();
+                    break;
+                case COMMAND_PAUSE:
+                    pause();
+                    break;
+                case COMMAND_STOP:
+                    stop();
+                    break;
+                case COMMAND_RESUME:
+                    resume();
+                    break;
+                case COMMAND_CHECK_IS_PLAYING:
+                    if (player != null && player.isPlaying()) {
+                        sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
+                    }
+                    break;
+                case COMMAND_UNKNOWN:
+                default:
+                    break;
+            }
+        }
+    }
 
-	/** ¶ÁÈ¡ÒôÀÖÎÄ¼ş */
-	private void load(int number) {
-		try {
-			player.reset();
-			player.setDataSource(MusicList.getMusicList().get(number).getmusicPath());
-			player.prepare();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// ×¢²á¼àÌıÆ÷
-		player.setOnCompletionListener(completionListener);
-	}
+    /** å‘é€å¹¿æ’­ï¼Œæé†’çŠ¶æ€æ”¹å˜äº† */
+    private void sendBroadcastOnStatusChanged(int status) {
+        Intent intent = new Intent(BROADCAST_MUSICSERVICE_UPDATE_STATUS);
+        intent.putExtra("status", status);
+        if (status !=STATUS_STOPPED) {
 
-	// ²¥·Å½áÊø¼àÌıÆ÷
-	OnCompletionListener completionListener = new OnCompletionListener() {
-		@Override
-		public void onCompletion(MediaPlayer player) {
-			if (player.isLooping()) {
-				replay();
-			} else {
-				sendBroadcastOnStatusChanged(MusicService.STATUS_COMPLETED);
-			}
-		}
-	};
-	
-	/** Ñ¡ÔñÏÂÒ»Çú */
-	private void moveNumberToNext() {
-		// ÅĞ¶ÏÊÇ·ñµ½´ïÁËÁĞ±íµ×¶Ë
-		if ((number ) == MusicList.getMusicList().size()-1) {
-				Toast.makeText(MusicService.this,"ÒÑ¾­µ½´ïÁĞ±íµ×²¿",Toast.LENGTH_SHORT).show();
-		} else {
-				++number;
-				play(number);
-		}
-	}
+            intent.putExtra("time", player.getCurrentPosition());
+            intent.putExtra("duration", player.getDuration());
+            intent.putExtra("number", number);
+            intent.putExtra("musicName", MusicList.getMusicList().get(number).getmusicName());
+            intent.putExtra("musicArtist", MusicList.getMusicList().get(number).getmusicArtist());
 
-	/** Ñ¡ÔñÏÂÒ»Çú */
-	private void moveNumberToPrevious() {
-		// ÅĞ¶ÏÊÇ·ñµ½´ïÁËÁĞ±í¶¥¶Ë
-		if (number == 0) {
-			Toast.makeText(MusicService.this,"ÒÑ¾­µ½´ïÁĞ±í¶¥²¿",Toast.LENGTH_SHORT).show();
-		} else {
-			--number;
-			play(number);
-		}
-	}
-	/** ²¥·ÅÒôÀÖ */
-	private void play(int number) {
-		// Í£Ö¹µ±Ç°²¥·Å
-		if (player != null && player.isPlaying()) {
-			player.stop();
-		}
-		load(number);
-		player.start();
-		status = MusicService.STATUS_PLAYING;
-		sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING); 
-	}
+        }
+        sendBroadcast(intent);
+    }
 
-	/** ÔİÍ£ÒôÀÖ */
-	private void pause() {
-		if (player.isPlaying()) {
-			player.pause();
-			status = MusicService.STATUS_PAUSED;
-			sendBroadcastOnStatusChanged(MusicService.STATUS_PAUSED);
-		}
-	}
+    /** è¯»å–éŸ³ä¹æ–‡ä»¶ */
+    private void load(int number) {
+        try {
+            player.reset();
+            player.setDataSource(MusicList.getMusicList().get(number).getmusicPath());
+            player.prepare();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        // æ³¨å†Œç›‘å¬å™¨
+        player.setOnCompletionListener(completionListener);
+    }
 
-	/** Í£Ö¹²¥·Å */
-	private void stop() {
-		if (status != MusicService.STATUS_STOPPED) {
-			player.stop();
-			sendBroadcastOnStatusChanged(MusicService.STATUS_STOPPED);
-		}
-	}
+    // æ’­æ”¾ç»“æŸç›‘å¬å™¨
+    OnCompletionListener completionListener = new OnCompletionListener() {
+        @Override
+        public void onCompletion(MediaPlayer player) {
+            if (player.isLooping()) {
+                replay();
+            } else {
+                sendBroadcastOnStatusChanged(MusicService.STATUS_COMPLETED);
+            }
+        }
+    };
 
-	/** »Ö¸´²¥·Å£¨ÔİÍ£Ö®ºó£© */
-	private void resume() {
-		player.start();
-		status = MusicService.STATUS_PLAYING;
-		sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
-	}
+    /** é€‰æ‹©ä¸‹ä¸€æ›² */
+    private void moveNumberToNext() {
+        // åˆ¤æ–­æ˜¯å¦åˆ°è¾¾äº†åˆ—è¡¨åº•ç«¯
+        if ((number ) == MusicList.getMusicList().size()-1) {
+            Toast.makeText(MusicService.this,"å·²ç»åˆ°è¾¾åˆ—è¡¨åº•éƒ¨",Toast.LENGTH_SHORT).show();
+        } else {
+            ++number;
+            play(number);
+        }
+    }
 
-	/** ÖØĞÂ²¥·Å£¨²¥·ÅÍê³ÉÖ®ºó£© */
-	private void replay() {
-		player.start();
-		status = MusicService.STATUS_PLAYING;
-		sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
-	}
+    /** é€‰æ‹©ä¸‹ä¸€æ›² */
+    private void moveNumberToPrevious() {
+        // åˆ¤æ–­æ˜¯å¦åˆ°è¾¾äº†åˆ—è¡¨é¡¶ç«¯
+        if (number == 0) {
+            Toast.makeText(MusicService.this,"å·²ç»åˆ°è¾¾åˆ—è¡¨é¡¶éƒ¨",Toast.LENGTH_SHORT).show();
+        } else {
+            --number;
+            play(number);
+        }
+    }
+    /** æ’­æ”¾éŸ³ä¹ */
+    private void play(int number) {
+        // åœæ­¢å½“å‰æ’­æ”¾
+        if (player != null && player.isPlaying()) {
+            player.stop();
+        }
+        load(number);
+        player.start();
+        status = MusicService.STATUS_PLAYING;
+        sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
+    }
 
-	/** Ìø×ªÖÁ²¥·ÅÎ»ÖÃ */
-	private void seekTo(int time) {
-			player.seekTo(time);
-			status = MusicService.STATUS_PLAYING;
-			sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
-	}
+    /** æš‚åœéŸ³ä¹ */
+    private void pause() {
+        if (player.isPlaying()) {
+            player.pause();
+            status = MusicService.STATUS_PAUSED;
+            sendBroadcastOnStatusChanged(MusicService.STATUS_PAUSED);
+        }
+    }
+
+    /** åœæ­¢æ’­æ”¾ */
+    private void stop() {
+        if (status != MusicService.STATUS_STOPPED) {
+            player.stop();
+            sendBroadcastOnStatusChanged(MusicService.STATUS_STOPPED);
+        }
+    }
+
+    /** æ¢å¤æ’­æ”¾ï¼ˆæš‚åœä¹‹åï¼‰ */
+    private void resume() {
+        player.start();
+        status = MusicService.STATUS_PLAYING;
+        sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
+    }
+
+    /** é‡æ–°æ’­æ”¾ï¼ˆæ’­æ”¾å®Œæˆä¹‹åï¼‰ */
+    private void replay() {
+        player.start();
+        status = MusicService.STATUS_PLAYING;
+        sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
+    }
+
+    /** è·³è½¬è‡³æ’­æ”¾ä½ç½® */
+    private void seekTo(int time) {
+        player.seekTo(time);
+        status = MusicService.STATUS_PLAYING;
+        sendBroadcastOnStatusChanged(MusicService.STATUS_PLAYING);
+    }
 }
