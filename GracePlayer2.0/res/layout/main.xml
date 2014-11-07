@@ -1,95 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/relativeLayout1"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@drawable/bg_blur"
-    android:orientation="vertical" >
-
-    <ListView
-        android:id="@+id/main_listview"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/linearLayout1"
-        android:fastScrollEnabled="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:layout_marginTop="10dip"
-        android:background="@drawable/widget_bg"
-        android:cacheColorHint="#00000000" />
+                android:id="@+id/relativeLayout1"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="@drawable/bg_blur"
+                android:orientation="vertical" >
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dip"
-        android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:background="@drawable/widget_bg"
-        android:orientation="vertical" >
-
-        <LinearLayout
-            android:id="@+id/linearLayout2"
+            android:id="@+id/main_volumeLayout"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:gravity="center" >
+            >
+
+        <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal" >
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal" >
+
+            <TextView
+                    android:id="@+id/main_tv_volumeText"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="音量 :100%"
+                    android:textColor="#ffffffff"
+                    android:textSize="15dp" />
+
+            <SeekBar
+                    android:id="@+id/main_sb_volumebar"
+                    android:layout_width="82dp"
+                    android:layout_height="wrap_content"
+                    android:maxHeight="5dip"
+                    android:minHeight="5dip"
+                    android:progressDrawable="@drawable/seekbar_style"
+                    android:thumb="@drawable/seekbar_thumb" />
+        </LinearLayout>
+    </LinearLayout>
+    <ListView
+            android:id="@+id/main_listview"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/linearLayout1"
+            android:layout_below="@id/main_volumeLayout"
+            android:fastScrollEnabled="true"
+            android:layout_marginLeft="10dip"
+            android:layout_marginRight="10dip"
+            android:background="@drawable/widget_bg"
+            android:cacheColorHint="#00000000" />
+
+    <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dip"
+            android:layout_marginLeft="10dip"
+            android:layout_marginRight="10dip"
+            android:background="@drawable/widget_bg"
+            android:orientation="vertical" >
+
+        <LinearLayout
+                android:id="@+id/linearLayout2"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center" >
 
             <ImageButton
-                android:id="@+id/main_ibtn_pre"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dip"
-                android:background="@drawable/button_previous" />
+                    android:id="@+id/main_ibtn_pre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dip"
+                    android:background="@drawable/button_previous" />
 
             <ImageButton
-                android:id="@+id/main_ibtn_play"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dip"
-                android:background="@drawable/button_play" />
+                    android:id="@+id/main_ibtn_play"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dip"
+                    android:background="@drawable/button_play" />
 
             <ImageButton
-                android:id="@+id/main_ibtn_stop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dip"
-                android:background="@drawable/button_stop" />
+                    android:id="@+id/main_ibtn_stop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dip"
+                    android:background="@drawable/button_stop" />
 
             <ImageButton
-                android:id="@+id/main_ibtn_next"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dip"
-                android:background="@drawable/button_next" />
+                    android:id="@+id/main_ibtn_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dip"
+                    android:background="@drawable/button_next" />
         </LinearLayout>
 
         <SeekBar
-            android:id="@+id/main_seekBar"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:paddingLeft="10dip"
-            android:paddingRight="10dip" />
+                android:id="@+id/main_seekBar"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="10dip"
+                android:paddingRight="10dip" />
 
         <RelativeLayout
-            android:id="@+id/relativeLayout2"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+                android:id="@+id/relativeLayout2"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" >
 
             <TextView
-                android:id="@+id/main_tv_curtime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:text="00:00" />
+                    android:id="@+id/main_tv_curtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:text="00:00" />
 
             <TextView
-                android:id="@+id/main_tv_totaltime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:text="00:00" />
+                    android:id="@+id/main_tv_totaltime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:text="00:00" />
         </RelativeLayout>
     </LinearLayout>
 
