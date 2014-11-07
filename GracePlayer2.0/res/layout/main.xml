@@ -121,6 +121,15 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:text="00:00" />
+            <ImageView
+                    android:layout_toRightOf="@+id/main_tv_curtime"
+                    android:layout_marginLeft="5dp"
+                    android:id="@+id/main_iv_sleep"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/sleep_timer"
+                    android:background="@drawable/sleep_timer"
+                    />
 
             <TextView
                     android:id="@+id/main_tv_totaltime"
