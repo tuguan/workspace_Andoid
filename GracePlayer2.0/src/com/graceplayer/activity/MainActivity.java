@@ -573,6 +573,10 @@ public class MainActivity extends Activity {
             case R.id.menu_sleep:
                 showSleepDialog();
                 break;
+            case R.id.menu_lrc:
+                Intent intent = new Intent(MainActivity.this,LrcActivity.class);
+                startActivity(intent);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
