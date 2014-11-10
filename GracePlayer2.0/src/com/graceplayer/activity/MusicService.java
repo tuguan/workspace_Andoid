@@ -52,6 +52,7 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
+        sendBroadcastOnStatusChanged(MusicService.STATUS_STOPPED);
         // 释放播放器资源
         if (player != null) {
             player.release();
