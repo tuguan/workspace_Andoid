@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string-array name="theme">
-		<item>朦胧</item>
+		<item>落日</item>
 		<item>冰雪</item>
-		<item>彩色</item>
+		<item>蓝色</item>
 		<item>花朵</item>
 		<item>群山</item>
-		<item>小狗</item>
-		<item>女孩</item>
+		<item>妖娆</item>
+		<item>女神</item>
 	</string-array>
 </resources>

@@ -433,20 +433,20 @@ public class MainActivity extends Activity {
 
     /** 设置Activity的主题，包括修改背景图片等 */
     private void setTheme(String theme) {
-        if ("彩色".equals(theme)) {
-            root_Layout.setBackgroundResource(R.drawable.bg_color);
+        if ("蓝色".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_blue);
         } else if ("花朵".equals(theme)) {
             root_Layout.setBackgroundResource(R.drawable.bg_digit_flower);
         } else if ("群山".equals(theme)) {
             root_Layout.setBackgroundResource(R.drawable.bg_mountain);
-        } else if ("小狗".equals(theme)) {
-            root_Layout.setBackgroundResource(R.drawable.bg_running_dog);
+        } else if ("妖娆".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_sexy);
         } else if ("冰雪".equals(theme)) {
             root_Layout.setBackgroundResource(R.drawable.bg_snow);
-        } else if ("女孩".equals(theme)) {
-            root_Layout.setBackgroundResource(R.drawable.bg_music_girl);
-        } else if ("朦胧".equals(theme)) {
+        } else if ("女神".equals(theme)) {
             root_Layout.setBackgroundResource(R.drawable.bg_blur);
+        } else if ("落日".equals(theme)) {
+            root_Layout.setBackgroundResource(R.drawable.bg_luori);
         }
     }
 
@@ -509,7 +509,7 @@ public class MainActivity extends Activity {
                 break;
             case R.id.menu_about:
                 // 显示文本对话框
-                new AlertDialog.Builder(MainActivity.this).setTitle("GracePlayer")
+                new AlertDialog.Builder(MainActivity.this).setTitle("听曲")
                         .setMessage(R.string.about).show();
                 break;
             case R.id.menu_quit:
